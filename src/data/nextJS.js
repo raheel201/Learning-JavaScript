@@ -510,5 +510,799 @@ export async function POST() {
 // 3. Full Route Cache - Entire route cached
 // 4. Router Cache - Client-side route cache`,
     explanation: "Next.js provides multiple caching strategies to optimize performance at build time, server, and client levels."
+  },
+  {
+    id: 88,
+    question: "What is getStaticPaths? When is it required?",
+    answer: "getStaticPaths generates dynamic routes at build time. Required for dynamic routes using getStaticProps.",
+    example: `// pages/posts/[slug].js
+export async function getStaticPaths() {
+  // Get all possible post slugs
+  const posts = await fetchAllPosts();
+  
+  const paths = posts.map(post => ({
+    params: { slug: post.slug }
+  }));
+  
+  return {
+    paths,
+    fallback: false // or true, 'blocking'
+  };
+}
+
+export async function getStaticProps({ params }) {
+  const post = await fetchPost(params.slug);
+  
+  return {
+    props: { post },
+    revalidate: 3600
+  };
+}
+
+// Fallback options:
+// false: 404 for non-generated paths
+// true: Show fallback UI, then load data
+// 'blocking': Wait for data before showing page
+
+// With fallback: true
+export default function Post({ post }) {
+  const router = useRouter();
+  
+  if (router.isFallback) {
+    return <div>Loading...</div>;
+  }
+  
+  return <div>{post.title}</div>;
+}
+
+// When required:
+// ✅ Dynamic routes with getStaticProps
+// ✅ [slug].js, [id].js, [...params].js
+// ❌ Not needed with getServerSideProps`,
+    explanation: "getStaticPaths pre-generates dynamic routes at build time. Use with getStaticProps for static generation of dynamic pages."
+  },
+  {
+    id: 89,
+    question: "Why are server components faster?",
+    answer: "Server components run on server, reducing bundle size, enabling direct data access, and eliminating client-side rendering overhead.",
+    example: `// Server Component - runs on server
+async function ServerComponent() {
+  // Direct database access (no API needed)
+  const posts = await db.posts.findMany();
+  
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// Benefits:
+// ✅ Zero JavaScript bundle impact
+// ✅ Direct data access (database, file system)
+// ✅ Server-side rendering by default
+// ✅ Better SEO and initial load
+// ✅ Automatic code splitting
+
+// Client Component - runs in browser
+'use client';
+
+function ClientComponent() {
+  const [posts, setPosts] = useState([]);
+  
+  useEffect(() => {
+    // Needs API call
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(setPosts);
+  }, []);
+  
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// Performance comparison:
+// Server: HTML sent to browser, no JS execution needed
+// Client: JS bundle downloaded, executed, then API call made`,
+    explanation: "Server components eliminate client-side JavaScript, enable direct data access, and provide better performance and SEO."
+  },
+  {
+    id: 90,
+    question: "How routing works in Next.js app router?",
+    answer: "App router uses file-system based routing with app/ directory. Folders define routes, special files define UI.",
+    example: `// File structure defines routes
+app/
+├── page.tsx          // / route
+├── about/
+│   └── page.tsx      // /about route
+├── blog/
+│   ├── page.tsx      // /blog route
+│   └── [slug]/
+│       └── page.tsx  // /blog/[slug] route
+└── dashboard/
+    ├── layout.tsx    // Layout for /dashboard/*
+    ├── page.tsx      // /dashboard route
+    └── settings/
+        └── page.tsx  // /dashboard/settings route
+
+// Special files:
+// page.tsx - UI for route
+// layout.tsx - Shared UI for segment and children
+// loading.tsx - Loading UI
+// error.tsx - Error UI
+// not-found.tsx - 404 UI
+// template.tsx - Re-rendered layout
+
+// Dynamic routes
+app/blog/[slug]/page.tsx
+function BlogPost({ params }) {
+  return <h1>Post: {params.slug}</h1>;
+}
+
+// Catch-all routes
+app/shop/[...slug]/page.tsx
+function ShopPage({ params }) {
+  // /shop/clothes/shirts/red
+  // params.slug = ['clothes', 'shirts', 'red']
+  return <div>Category: {params.slug.join('/')}</div>;
+}
+
+// Optional catch-all
+app/docs/[[...slug]]/page.tsx
+// Matches /docs, /docs/a, /docs/a/b
+
+// Route groups (don't affect URL)
+app/(marketing)/about/page.tsx  // /about
+app/(shop)/products/page.tsx    // /products`,
+    explanation: "App router uses folders for routes and special files for UI. Supports dynamic routes, layouts, and advanced routing patterns."
+  },
+  {
+    id: 91,
+    question: "Difference between layout.tsx and page.tsx?",
+    answer: "layout.tsx wraps multiple pages with shared UI. page.tsx defines the unique UI for a specific route.",
+    example: `// app/layout.tsx - Root layout (required)
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <header>
+          <nav>Global Navigation</nav>
+        </header>
+        {children} {/* Page content goes here */}
+        <footer>Global Footer</footer>
+      </body>
+    </html>
+  );
+}
+
+// app/dashboard/layout.tsx - Nested layout
+export default function DashboardLayout({ children }) {
+  return (
+    <div className="dashboard">
+      <aside>
+        <nav>Dashboard Navigation</nav>
+      </aside>
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// app/dashboard/page.tsx - Dashboard page
+export default function DashboardPage() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome to your dashboard</p>
+    </div>
+  );
+}
+
+// app/dashboard/settings/page.tsx - Settings page
+export default function SettingsPage() {
+  return (
+    <div>
+      <h1>Settings</h1>
+      <form>Settings form</form>
+    </div>
+  );
+}
+
+// Rendered structure for /dashboard/settings:
+// RootLayout
+//   └── DashboardLayout
+//       └── SettingsPage
+
+// Layout features:
+// ✅ Shared across multiple pages
+// ✅ State preserved during navigation
+// ✅ Can be nested
+// ✅ Can fetch data
+
+// Page features:
+// ✅ Unique UI for route
+// ✅ Can receive params and searchParams
+// ✅ Can be server or client component`,
+    explanation: "Layouts provide shared UI structure across routes. Pages define route-specific content. Layouts wrap pages and preserve state."
+  },
+  {
+    id: 92,
+    question: "How to apply metadata & SEO in Next.js?",
+    answer: "Use metadata API in app router or Head component in pages router for SEO optimization.",
+    example: `// App Router - Static metadata
+// app/page.tsx
+export const metadata = {
+  title: 'Home Page',
+  description: 'Welcome to our website',
+  keywords: ['nextjs', 'react', 'seo'],
+  openGraph: {
+    title: 'Home Page',
+    description: 'Welcome to our website',
+    images: ['/og-image.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Home Page',
+    description: 'Welcome to our website',
+    images: ['/twitter-image.jpg'],
+  },
+};
+
+// Dynamic metadata
+// app/blog/[slug]/page.tsx
+export async function generateMetadata({ params }) {
+  const post = await fetchPost(params.slug);
+  
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [post.image],
+    },
+  };
+}
+
+// Pages Router - Head component
+import Head from 'next/head';
+
+function HomePage() {
+  return (
+    <>
+      <Head>
+        <title>Home Page</title>
+        <meta name="description" content="Welcome to our website" />
+        <meta name="keywords" content="nextjs,react,seo" />
+        <meta property="og:title" content="Home Page" />
+        <meta property="og:description" content="Welcome to our website" />
+        <meta property="og:image" content="/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://example.com" />
+      </Head>
+      <h1>Welcome</h1>
+    </>
+  );
+}
+
+// JSON-LD structured data
+export default function ProductPage({ product }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.image,
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'USD',
+    },
+  };
+  
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div>{/* Product content */}</div>
+    </>
+  );
+}`,
+    explanation: "Use metadata API for type-safe SEO in app router. Include Open Graph, Twitter cards, and structured data for better search visibility."
+  },
+  {
+    id: 93,
+    question: "What is dynamic routing in Next.js?",
+    answer: "Dynamic routing creates pages with variable URL segments using brackets in file names like [id].js or [slug].js.",
+    example: `// File: pages/posts/[slug].js
+function Post({ post }) {
+  return (
+    <div>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
+    </div>
+  );
+}
+
+export async function getStaticProps({ params }) {
+  const post = await fetchPost(params.slug);
+  return { props: { post } };
+}
+
+export async function getStaticPaths() {
+  const posts = await fetchAllPosts();
+  const paths = posts.map(post => ({ params: { slug: post.slug } }));
+  return { paths, fallback: false };
+}
+
+// Catch-all routes: [...slug].js
+// pages/docs/[...slug].js
+function DocsPage({ params }) {
+  // /docs/getting-started/installation
+  // params.slug = ['getting-started', 'installation']
+  return <div>Docs: {params.slug.join('/')}</div>;
+}
+
+// Optional catch-all: [[...slug]].js
+// Matches /docs and /docs/anything
+
+// App Router dynamic routes
+// app/products/[id]/page.tsx
+function ProductPage({ params }) {
+  return <div>Product ID: {params.id}</div>;
+}
+
+// Multiple dynamic segments
+// app/shop/[category]/[product]/page.tsx
+function ProductPage({ params }) {
+  return (
+    <div>
+      <p>Category: {params.category}</p>
+      <p>Product: {params.product}</p>
+    </div>
+  );
+}
+
+// Accessing query parameters
+// /products/123?color=red&size=large
+function ProductPage({ params, searchParams }) {
+  return (
+    <div>
+      <p>ID: {params.id}</p>
+      <p>Color: {searchParams.color}</p>
+      <p>Size: {searchParams.size}</p>
+    </div>
+  );
+}`,
+    explanation: "Dynamic routes use bracket notation for variable segments. Support single, multiple, and catch-all dynamic segments."
+  },
+  {
+    id: 94,
+    question: "What are API routes? How do you use them?",
+    answer: "API routes create serverless functions for backend logic. Place in pages/api/ or app/api/ directory.",
+    example: `// Pages Router: pages/api/users.js
+export default function handler(req, res) {
+  if (req.method === 'GET') {
+    const users = [{ id: 1, name: 'John' }];
+    res.status(200).json(users);
+  } else if (req.method === 'POST') {
+    const { name, email } = req.body;
+    // Save user to database
+    res.status(201).json({ id: 2, name, email });
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(\`Method \${req.method} Not Allowed\`);
+  }
+}
+
+// App Router: app/api/users/route.ts
+export async function GET() {
+  const users = await fetchUsers();
+  return Response.json(users);
+}
+
+export async function POST(request) {
+  const { name, email } = await request.json();
+  const user = await createUser({ name, email });
+  return Response.json(user, { status: 201 });
+}
+
+// Dynamic API routes: app/api/users/[id]/route.ts
+export async function GET(request, { params }) {
+  const user = await fetchUser(params.id);
+  if (!user) {
+    return new Response('User not found', { status: 404 });
+  }
+  return Response.json(user);
+}
+
+export async function DELETE(request, { params }) {
+  await deleteUser(params.id);
+  return new Response(null, { status: 204 });
+}
+
+// Middleware for API routes
+// app/api/protected/route.ts
+export async function GET(request) {
+  const token = request.headers.get('authorization');
+  
+  if (!token) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  
+  const user = await verifyToken(token);
+  return Response.json({ user });
+}
+
+// Using API routes in components
+function UserList() {
+  const [users, setUsers] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(setUsers);
+  }, []);
+  
+  const createUser = async (userData) => {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    const newUser = await response.json();
+    setUsers(prev => [...prev, newUser]);
+  };
+  
+  return <div>{/* Render users */}</div>;
+}`,
+    explanation: "API routes provide serverless backend functionality. Support all HTTP methods and can access databases, external APIs, and authentication."
+  },
+  {
+    id: 95,
+    question: "What is edge runtime?",
+    answer: "Edge runtime is a lightweight JavaScript runtime optimized for edge computing with faster cold starts and global distribution.",
+    example: `// API route with edge runtime
+// app/api/hello/route.ts
+export const runtime = 'edge';
+
+export async function GET(request) {
+  return new Response('Hello from the edge!', {
+    headers: { 'content-type': 'text/plain' },
+  });
+}
+
+// Edge API with geolocation
+export const runtime = 'edge';
+
+export async function GET(request) {
+  const country = request.geo?.country || 'Unknown';
+  const city = request.geo?.city || 'Unknown';
+  
+  return Response.json({
+    message: \`Hello from \${city}, \${country}!\`,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// Middleware (always runs on edge)
+// middleware.ts
+export function middleware(request) {
+  const country = request.geo?.country;
+  
+  if (country === 'CN') {
+    return NextResponse.redirect(new URL('/cn', request.url));
+  }
+  
+  return NextResponse.next();
+}
+
+// Edge runtime limitations:
+// ❌ No Node.js APIs (fs, path, etc.)
+// ❌ Limited npm packages
+// ❌ No native modules
+// ✅ Web APIs (fetch, Response, etc.)
+// ✅ Faster cold starts
+// ✅ Global distribution
+
+// When to use edge runtime:
+// ✅ Simple API logic
+// ✅ Authentication checks
+// ✅ Redirects and rewrites
+// ✅ A/B testing
+// ✅ Geolocation-based logic
+
+// Node.js runtime (default)
+export const runtime = 'nodejs';
+
+export async function GET() {
+  const fs = require('fs');
+  const data = fs.readFileSync('data.json', 'utf8');
+  return Response.json(JSON.parse(data));
+}`,
+    explanation: "Edge runtime provides faster cold starts and global distribution but with limited APIs. Use for simple logic and geolocation features."
+  },
+  {
+    id: 96,
+    question: "What are static assets in Next.js?",
+    answer: "Static assets are files served directly by the web server. Place in public/ directory and reference with absolute paths.",
+    example: `// File structure
+public/
+├── favicon.ico
+├── logo.png
+├── images/
+│   ├── hero.jpg
+│   └── profile.png
+├── icons/
+│   └── arrow.svg
+└── documents/
+    └── resume.pdf
+
+// Referencing static assets
+function HomePage() {
+  return (
+    <div>
+      {/* Images */}
+      <img src="/logo.png" alt="Logo" />
+      <img src="/images/hero.jpg" alt="Hero" />
+      
+      {/* Icons */}
+      <img src="/icons/arrow.svg" alt="Arrow" />
+      
+      {/* Documents */}
+      <a href="/documents/resume.pdf" download>
+        Download Resume
+      </a>
+      
+      {/* Favicon (automatically used) */}
+      <link rel="icon" href="/favicon.ico" />
+    </div>
+  );
+}
+
+// Using with Next.js Image component
+import Image from 'next/image';
+
+function OptimizedImages() {
+  return (
+    <div>
+      <Image
+        src="/images/hero.jpg"
+        alt="Hero"
+        width={800}
+        height={400}
+        priority // Load immediately
+      />
+      
+      <Image
+        src="/images/profile.png"
+        alt="Profile"
+        width={200}
+        height={200}
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,..."
+      />
+    </div>
+  );
+}
+
+// CSS background images
+.hero {
+  background-image: url('/images/hero.jpg');
+  background-size: cover;
+}
+
+// Manifest and PWA assets
+// public/manifest.json
+{
+  "name": "My App",
+  "short_name": "MyApp",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
+
+// Best practices:
+// ✅ Use descriptive file names
+// ✅ Optimize images before uploading
+// ✅ Use appropriate formats (WebP, AVIF)
+// ✅ Organize in subdirectories
+// ❌ Don't put sensitive files in public/`,
+    explanation: "Static assets in public/ are served directly with absolute paths. Use Next.js Image component for optimization and better performance."
+  },
+  {
+    id: 97,
+    question: "How env files work in Next.js?",
+    answer: "Environment variables are loaded from .env files. Use NEXT_PUBLIC_ prefix for client-side access.",
+    example: `// .env.local (highest priority, ignored by git)
+DATABASE_URL=postgresql://localhost:5432/mydb
+SECRET_KEY=your-secret-key
+NEXT_PUBLIC_API_URL=https://api.example.com
+
+// .env.development (development only)
+NEXT_PUBLIC_DEBUG=true
+DEBUG_MODE=enabled
+
+// .env.production (production only)
+NEXT_PUBLIC_DEBUG=false
+DEBUG_MODE=disabled
+
+// .env (default for all environments)
+APP_NAME=My Next.js App
+
+// Loading order (highest to lowest priority):
+// 1. .env.local
+// 2. .env.development / .env.production
+// 3. .env
+
+// Server-side usage (API routes, getServerSideProps)
+export async function getServerSideProps() {
+  const dbUrl = process.env.DATABASE_URL; // Available server-side
+  const secretKey = process.env.SECRET_KEY; // Available server-side
+  
+  return { props: {} };
+}
+
+// API route
+export default function handler(req, res) {
+  const dbUrl = process.env.DATABASE_URL; // Available
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL; // Available
+  
+  res.json({ message: 'Success' });
+}
+
+// Client-side usage (components)
+function MyComponent() {
+  // Only NEXT_PUBLIC_ variables available
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL; // Available
+  const debugMode = process.env.NEXT_PUBLIC_DEBUG; // Available
+  
+  // const secretKey = process.env.SECRET_KEY; // undefined on client
+  
+  return <div>API URL: {apiUrl}</div>;
+}
+
+// Runtime configuration (alternative approach)
+// next.config.js
+module.exports = {
+  publicRuntimeConfig: {
+    apiUrl: process.env.API_URL,
+  },
+  serverRuntimeConfig: {
+    secretKey: process.env.SECRET_KEY,
+  },
+};
+
+// Using runtime config
+import getConfig from 'next/config';
+
+const { publicRuntimeConfig, serverRuntimeConfig } = getConfig();
+
+// .gitignore
+.env*.local
+.env.local
+
+// Environment-specific files to commit:
+// .env.example (template)
+// .env.development
+// .env.production`,
+    explanation: "Environment variables with NEXT_PUBLIC_ prefix are available client-side. Server-only variables are accessible in API routes and SSR functions."
+  },
+  {
+    id: 98,
+    question: "How to deploy a Next.js app?",
+    answer: "Deploy Next.js apps to Vercel (easiest), Netlify, AWS, Docker, or any Node.js hosting platform.",
+    example: `// 1. Vercel (Recommended)
+// Install Vercel CLI
+npm i -g vercel
+
+// Deploy
+vercel
+
+// Or connect GitHub repo to Vercel dashboard
+// Auto-deploys on push to main branch
+
+// 2. Build for production
+npm run build
+npm start
+
+// 3. Docker deployment
+// Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+
+// Build and run
+docker build -t my-nextjs-app .
+docker run -p 3000:3000 my-nextjs-app
+
+// 4. Static export (for CDN hosting)
+// next.config.js
+module.exports = {
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  }
+};
+
+// Build static files
+npm run build
+// Outputs to 'out' directory
+
+// 5. AWS deployment with Serverless
+// serverless.yml
+service: my-nextjs-app
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+plugins:
+  - serverless-nextjs-plugin
+
+// Deploy
+serverless deploy
+
+// 6. Environment variables for deployment
+// .env.production
+NEXT_PUBLIC_API_URL=https://api.production.com
+DATABASE_URL=postgresql://prod-db-url
+
+// Vercel environment variables
+// Set in Vercel dashboard or vercel.json
+{
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "SECRET_KEY": "@secret-key"
+  }
+}
+
+// 7. Custom server deployment
+// server.js
+const { createServer } = require('http');
+const { parse } = require('url');
+const next = require('next');
+
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
+
+app.prepare().then(() => {
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
+  }).listen(3000, (err) => {
+    if (err) throw err;
+    console.log('> Ready on http://localhost:3000');
+  });
+});`,
+    explanation: "Vercel provides the easiest deployment for Next.js. Other options include Docker, static export, AWS, and custom servers depending on requirements."
   }
 ];
