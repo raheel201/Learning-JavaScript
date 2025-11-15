@@ -1,70 +1,149 @@
-# Getting Started with Create React App
+# 🚀 JavaScript Interview Preparation App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive React application designed to help you master JavaScript concepts for technical interviews. Features interactive questions, detailed explanations, and progress tracking.
 
-## Available Scripts
+## 🎯 Features
 
-In the project directory, you can run:
+- **6 Categories** covering all essential JavaScript topics
+- **32+ Interview Questions** with detailed answers and examples
+- **Interactive Learning** - Show/hide answers and code examples
+- **Search Functionality** - Find questions quickly
+- **Progress Tracking** - Track your learning journey
+- **Responsive Design** - Works on all devices
+- **Real-world Examples** - Practical code demonstrations
+
+## 📚 Topics Covered
+
+### Core JS Concepts
+- Execution Context & Call Stack
+- Hoisting & Temporal Dead Zone
+- Scope & Closures
+- var, let, const differences
+
+### this, Prototype, OOP
+- 'this' binding in different contexts
+- call, apply, bind methods
+- Prototypal inheritance
+- Constructor functions vs Classes
+
+### Asynchronous JavaScript
+- Event Loop mechanics
+- Promises vs async/await
+- Microtasks vs Macrotasks
+- Debouncing & Throttling
+
+### Arrays, Objects, Data Structures
+- Array methods (map, forEach, reduce)
+- Shallow vs Deep copy
+- == vs === comparison
+- Object manipulation
+
+### ES6+ Features
+- Arrow functions
+- Destructuring
+- Spread/Rest operators
+- Modules
+
+### Performance & Best Practices
+- Memoization
+- Memory leaks prevention
+- Optimization techniques
+
+### Trick Questions
+- Common interview gotchas
+- Output-based questions
+- Edge cases and pitfalls
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd js-rs-ts-learning
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm start
+```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## 📖 How to Use
+
+1. **Select a Category** - Choose from 6 different JavaScript topics
+2. **Browse Questions** - Read through interview questions in each category
+3. **Show Answers** - Click to reveal detailed answers and explanations
+4. **View Examples** - See practical code examples for each concept
+5. **Search** - Use the search bar to find specific topics
+6. **Track Progress** - Monitor your learning progress across all categories
+
+## 🎯 Interview Preparation Tips
+
+### Study Strategy
+1. **Week 1**: Focus on Core JS Concepts
+2. **Week 2**: Master 'this', Prototypes, and OOP
+3. **Week 3**: Understand Asynchronous JavaScript
+4. **Week 4**: Practice Trick Questions and Real-world Scenarios
+
+### During Interviews
+- Think out loud and explain your reasoning
+- Start with simple solutions, then optimize
+- Ask clarifying questions
+- Use concrete examples from your experience
+
+## 📁 Project Structure
+
+```
+src/
+├── components/
+│   ├── CategorySelector.js    # Category navigation
+│   ├── QuestionCard.js        # Individual question display
+│   ├── SearchBar.js           # Search functionality
+│   └── ProgressTracker.js     # Progress monitoring
+├── data/
+│   └── questionsData.js       # All questions and answers
+├── App.js                     # Main application component
+├── App.css                    # Styling
+└── index.js                   # Entry point
+```
+
+## 🔧 Available Scripts
 
 ### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner in interactive watch mode
 
 ### `npm run build`
+Builds the app for production to the `build` folder
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📚 Additional Resources
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- [INTERVIEW_GUIDE.md](./INTERVIEW_GUIDE.md) - Quick reference guide for interviews
+- [MDN JavaScript Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+- [JavaScript.info](https://javascript.info/) - Modern JavaScript tutorial
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🤝 Contributing
 
-### `npm run eject`
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 📄 License
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This project is licensed under the MIT License.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Good luck with your JavaScript interviews! 🚀**
