@@ -425,5 +425,411 @@ let key = {};
 weakMap.set(key, "value");
 key = null; // Entry in WeakMap becomes eligible for GC`,
     explanation: "Mark-and-sweep GC marks reachable objects, then sweeps away unmarked ones. Handles circular references automatically."
+  },
+  {
+    id: 17,
+    question: "What is event delegation?",
+    answer: "Event delegation is a technique where you attach a single event listener to a parent element to handle events for multiple child elements.",
+    example: `// Without delegation - multiple listeners
+document.querySelectorAll('.button').forEach(btn => {
+  btn.addEventListener('click', handleClick);
+});
+
+// With delegation - single listener
+document.getElementById('container').addEventListener('click', function(e) {
+  if (e.target.classList.contains('button')) {
+    handleClick(e);
+  }
+});
+
+// Real example
+<ul id="list">
+  <li data-id="1">Item 1</li>
+  <li data-id="2">Item 2</li>
+</ul>
+
+document.getElementById('list').addEventListener('click', function(e) {
+  if (e.target.tagName === 'LI') {
+    console.log('Clicked item:', e.target.dataset.id);
+  }
+});`,
+    explanation: "Event delegation uses event bubbling to handle events efficiently, especially for dynamic content."
+  },
+  {
+    id: 18,
+    question: "Explain immutability in JavaScript. How do you enforce it?",
+    answer: "Immutability means objects cannot be changed after creation. JavaScript objects are mutable by default, but we can enforce immutability.",
+    example: `// Mutable (default)
+const obj = { name: 'John' };
+obj.name = 'Jane'; // Allowed
+
+// Object.freeze() - shallow immutability
+const frozenObj = Object.freeze({ name: 'John', age: 30 });
+frozenObj.name = 'Jane'; // Ignored in non-strict, error in strict
+
+// Deep freeze
+function deepFreeze(obj) {
+  Object.getOwnPropertyNames(obj).forEach(prop => {
+    if (obj[prop] !== null && typeof obj[prop] === 'object') {
+      deepFreeze(obj[prop]);
+    }
+  });
+  return Object.freeze(obj);
+}
+
+// Immutable updates
+const original = { name: 'John', skills: ['JS'] };
+const updated = {
+  ...original,
+  name: 'Jane',
+  skills: [...original.skills, 'React']
+};`,
+    explanation: "Immutability prevents bugs, enables optimization, and makes code predictable. Use spread operator, Object.freeze(), or libraries like Immutable.js."
+  },
+  {
+    id: 19,
+    question: "What are higher-order functions?",
+    answer: "Higher-order functions are functions that take other functions as arguments or return functions as results.",
+    example: `// Function that takes function as argument
+function withLogging(fn) {
+  return function(...args) {
+    console.log('Calling function with:', args);
+    const result = fn(...args);
+    console.log('Result:', result);
+    return result;
+  };
+}
+
+const add = (a, b) => a + b;
+const loggedAdd = withLogging(add);
+loggedAdd(2, 3); // Logs and returns 5
+
+// Built-in higher-order functions
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(x => x * 2); // [2, 4, 6, 8, 10]
+const evens = numbers.filter(x => x % 2 === 0); // [2, 4]
+const sum = numbers.reduce((acc, x) => acc + x, 0); // 15
+
+// Function that returns function
+function createMultiplier(factor) {
+  return function(number) {
+    return number * factor;
+  };
+}
+
+const double = createMultiplier(2);
+console.log(double(5)); // 10`,
+    explanation: "Higher-order functions enable functional programming patterns, code reuse, and abstraction."
+  },
+  {
+    id: 20,
+    question: "What is function currying? Example?",
+    answer: "Currying transforms a function with multiple arguments into a sequence of functions, each taking a single argument.",
+    example: `// Regular function
+function add(a, b, c) {
+  return a + b + c;
+}
+
+// Curried version
+function curriedAdd(a) {
+  return function(b) {
+    return function(c) {
+      return a + b + c;
+    };
+  };
+}
+
+// Usage
+const result1 = curriedAdd(1)(2)(3); // 6
+const addOne = curriedAdd(1);
+const addOneAndTwo = addOne(2);
+const result2 = addOneAndTwo(3); // 6
+
+// Arrow function currying
+const multiply = a => b => c => a * b * c;
+const result3 = multiply(2)(3)(4); // 24
+
+// Practical example - API calls
+const apiCall = baseUrl => endpoint => params => {
+  return fetch(\`\${baseUrl}/\${endpoint}\`, {
+    method: 'POST',
+    body: JSON.stringify(params)
+  });
+};
+
+const myApi = apiCall('https://api.example.com');
+const createUser = myApi('users');
+createUser({ name: 'John', email: 'john@example.com' });`,
+    explanation: "Currying enables partial application, function composition, and creates reusable specialized functions."
+  },
+  {
+    id: 21,
+    question: "Explain pure vs impure functions.",
+    answer: "Pure functions always return same output for same input and have no side effects. Impure functions may have side effects or non-deterministic output.",
+    example: `// Pure functions
+function add(a, b) {
+  return a + b; // Same input = same output, no side effects
+}
+
+function multiply(arr, factor) {
+  return arr.map(x => x * factor); // Doesn't modify original array
+}
+
+// Impure functions
+let counter = 0;
+function increment() {
+  counter++; // Side effect: modifies external variable
+  return counter;
+}
+
+function addRandom(a) {
+  return a + Math.random(); // Non-deterministic output
+}
+
+function logAndAdd(a, b) {
+  console.log('Adding:', a, b); // Side effect: console output
+  return a + b;
+}
+
+function modifyArray(arr) {
+  arr.push(4); // Side effect: modifies input
+  return arr;
+}
+
+// Making impure functions pure
+function pureModifyArray(arr) {
+  return [...arr, 4]; // Returns new array
+}`,
+    explanation: "Pure functions are predictable, testable, and cacheable. They enable functional programming and easier debugging."
+  },
+  {
+    id: 22,
+    question: "What is memoization?",
+    answer: "Memoization is an optimization technique that caches function results to avoid expensive recalculations for the same inputs.",
+    example: `// Without memoization - expensive calculation
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// With memoization
+function memoizedFibonacci() {
+  const cache = {};
+  
+  return function fib(n) {
+    if (n in cache) {
+      return cache[n];
+    }
+    
+    if (n <= 1) {
+      cache[n] = n;
+    } else {
+      cache[n] = fib(n - 1) + fib(n - 2);
+    }
+    
+    return cache[n];
+  };
+}
+
+const fastFib = memoizedFibonacci();
+console.log(fastFib(40)); // Much faster!
+
+// Generic memoization function
+function memoize(fn) {
+  const cache = {};
+  
+  return function(...args) {
+    const key = JSON.stringify(args);
+    
+    if (key in cache) {
+      return cache[key];
+    }
+    
+    const result = fn.apply(this, args);
+    cache[key] = result;
+    return result;
+  };
+}
+
+const memoizedAdd = memoize((a, b) => {
+  console.log('Computing...'); // Only logs once per unique input
+  return a + b;
+});`,
+    explanation: "Memoization trades memory for speed, ideal for expensive pure functions with repeated calls."
+  },
+  {
+    id: 23,
+    question: "What are first-class functions?",
+    answer: "First-class functions means functions are treated like any other value - they can be assigned to variables, passed as arguments, and returned from functions.",
+    example: `// 1. Assign to variables
+const greet = function(name) {
+  return \`Hello, \${name}!\`;
+};
+
+const sayHi = greet;
+console.log(sayHi('John')); // "Hello, John!"
+
+// 2. Pass as arguments
+function executeFunction(fn, arg) {
+  return fn(arg);
+}
+
+const result = executeFunction(greet, 'Alice'); // "Hello, Alice!"
+
+// 3. Return from functions
+function createGreeter(greeting) {
+  return function(name) {
+    return \`\${greeting}, \${name}!\`;
+  };
+}
+
+const spanishGreeter = createGreeter('Hola');
+console.log(spanishGreeter('Maria')); // "Hola, Maria!"
+
+// 4. Store in data structures
+const operations = {
+  add: (a, b) => a + b,
+  subtract: (a, b) => a - b,
+  multiply: (a, b) => a * b
+};
+
+const mathFunctions = [operations.add, operations.multiply];
+
+// 5. Dynamic function calls
+const operation = 'add';
+const result2 = operations[operation](5, 3); // 8`,
+    explanation: "First-class functions enable functional programming, callbacks, higher-order functions, and dynamic behavior."
+  },
+  {
+    id: 24,
+    question: "What is short-circuit evaluation? Examples?",
+    answer: "Short-circuit evaluation stops evaluating logical expressions as soon as the result is determined, skipping remaining operands.",
+    example: `// Logical AND (&&) - stops at first falsy
+false && console.log('This won\'t run'); // console.log not executed
+true && console.log('This will run'); // console.log executed
+
+// Logical OR (||) - stops at first truthy
+true || console.log('This won\'t run'); // console.log not executed
+false || console.log('This will run'); // console.log executed
+
+// Practical examples
+function processUser(user) {
+  // Check if user exists before accessing properties
+  user && user.name && console.log(user.name);
+  
+  // Default values
+  const name = user.name || 'Anonymous';
+  
+  // Conditional execution
+  user.isAdmin && performAdminAction();
+}
+
+// Nullish coalescing (??) - only null/undefined
+const value1 = null ?? 'default'; // 'default'
+const value2 = 0 ?? 'default'; // 0 (not 'default')
+const value3 = '' ?? 'default'; // '' (not 'default')
+
+// Optional chaining (?.) - short-circuits on null/undefined
+const user = { profile: { name: 'John' } };
+const userName = user?.profile?.name; // 'John'
+const missing = user?.settings?.theme; // undefined (no error)
+
+// Function calls
+user?.notify?.(); // Only calls if notify exists`,
+    explanation: "Short-circuit evaluation improves performance and prevents errors by avoiding unnecessary operations."
+  },
+  {
+    id: 25,
+    question: "What is optional vs default parameter?",
+    answer: "Default parameters provide fallback values when arguments are undefined. Optional parameters can be omitted entirely.",
+    example: `// Default parameters
+function greet(name = 'World', greeting = 'Hello') {
+  return \`\${greeting}, \${name}!\`;
+}
+
+console.log(greet()); // "Hello, World!"
+console.log(greet('John')); // "Hello, John!"
+console.log(greet('John', 'Hi')); // "Hi, John!"
+console.log(greet(undefined, 'Hey')); // "Hey, World!"
+
+// Default parameters with expressions
+function createUser(name, id = Date.now(), active = true) {
+  return { name, id, active };
+}
+
+// Default parameters can reference previous parameters
+function buildUrl(protocol = 'https', domain, path = '/') {
+  return \`\${protocol}://\${domain}\${path}\`;
+}
+
+// Rest parameters (truly optional)
+function sum(first, ...rest) {
+  return rest.reduce((acc, num) => acc + num, first || 0);
+}
+
+sum(1); // 1
+sum(1, 2, 3, 4); // 10
+
+// Destructuring with defaults
+function processOptions({ timeout = 5000, retries = 3, debug = false } = {}) {
+  console.log({ timeout, retries, debug });
+}
+
+processOptions(); // Uses all defaults
+processOptions({ timeout: 1000 }); // timeout: 1000, others default`,
+    explanation: "Default parameters handle undefined values, while optional parameters (rest/destructuring) handle missing arguments entirely."
+  },
+  {
+    id: 26,
+    question: "Explain pass-by-value vs pass-by-reference in JavaScript.",
+    answer: "JavaScript passes primitives by value (copies the value) and objects by reference (copies the reference to the object).",
+    example: `// Pass by value (primitives)
+function changeValue(x) {
+  x = 10;
+  console.log('Inside function:', x); // 10
+}
+
+let num = 5;
+changeValue(num);
+console.log('Outside function:', num); // 5 (unchanged)
+
+// Pass by reference (objects)
+function changeObject(obj) {
+  obj.name = 'Changed';
+  obj.newProp = 'Added';
+  console.log('Inside function:', obj);
+}
+
+let person = { name: 'John', age: 30 };
+changeObject(person);
+console.log('Outside function:', person); // { name: 'Changed', age: 30, newProp: 'Added' }
+
+// Reassigning the reference doesn't affect original
+function reassignObject(obj) {
+  obj = { name: 'New Object' }; // Creates new reference
+  obj.age = 25;
+}
+
+let user = { name: 'Alice' };
+reassignObject(user);
+console.log(user); // { name: 'Alice' } (unchanged)
+
+// Arrays (also objects)
+function modifyArray(arr) {
+  arr.push(4); // Modifies original
+  arr[0] = 'changed'; // Modifies original
+}
+
+let numbers = [1, 2, 3];
+modifyArray(numbers);
+console.log(numbers); // ['changed', 2, 3, 4]
+
+// Creating copies to avoid mutation
+function safeCopy(obj) {
+  const copy = { ...obj }; // Shallow copy
+  copy.name = 'Modified Copy';
+  return copy;
+}`,
+    explanation: "Understanding pass-by-value vs pass-by-reference is crucial for avoiding unintended mutations and side effects."
   }
 ];

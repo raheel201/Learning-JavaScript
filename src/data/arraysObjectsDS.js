@@ -506,5 +506,730 @@ const deepFrozen = deepFreeze({
 deepFrozen.user.name = "Jane"; // Ignored
 console.log(deepFrozen.user.name); // "John"`,
     explanation: "freeze creates immutable objects, seal allows property modification, preventExtensions only blocks new properties."
+  },
+  {
+    id: 46,
+    question: "What is Array.from and when do you use it?",
+    answer: "Array.from creates array from array-like objects or iterables. Useful for converting NodeLists, strings, or creating arrays with mapping.",
+    example: `// Convert string to array
+const str = "hello";
+const chars = Array.from(str);
+console.log(chars); // ['h', 'e', 'l', 'l', 'o']
+
+// Convert NodeList to array
+const divs = document.querySelectorAll('div');
+const divArray = Array.from(divs);
+divArray.forEach(div => console.log(div));
+
+// Create array with length and mapping
+const numbers = Array.from({ length: 5 }, (_, i) => i + 1);
+console.log(numbers); // [1, 2, 3, 4, 5]
+
+// Create array of squares
+const squares = Array.from({ length: 5 }, (_, i) => i * i);
+console.log(squares); // [0, 1, 4, 9, 16]
+
+// Convert Set to array
+const set = new Set([1, 2, 3, 2, 1]);
+const uniqueArray = Array.from(set);
+console.log(uniqueArray); // [1, 2, 3]
+
+// Convert Map to array
+const map = new Map([['a', 1], ['b', 2]]);
+const mapArray = Array.from(map);
+console.log(mapArray); // [['a', 1], ['b', 2]]
+
+// With mapping function
+const doubled = Array.from([1, 2, 3], x => x * 2);
+console.log(doubled); // [2, 4, 6]
+
+// Arguments object to array
+function example() {
+  const args = Array.from(arguments);
+  return args.map(x => x * 2);
+}
+console.log(example(1, 2, 3)); // [2, 4, 6]`,
+    explanation: "Array.from is perfect for converting array-like objects to real arrays and creating arrays with custom logic."
+  },
+  {
+    id: 47,
+    question: "What is the difference between find vs filter?",
+    answer: "find returns first matching element or undefined. filter returns array of all matching elements.",
+    example: `const users = [
+  { id: 1, name: 'Alice', age: 25 },
+  { id: 2, name: 'Bob', age: 30 },
+  { id: 3, name: 'Charlie', age: 25 }
+];
+
+// find - returns first match or undefined
+const firstUser25 = users.find(user => user.age === 25);
+console.log(firstUser25); // { id: 1, name: 'Alice', age: 25 }
+
+const userNotFound = users.find(user => user.age === 40);
+console.log(userNotFound); // undefined
+
+// filter - returns array of all matches
+const allUsers25 = users.filter(user => user.age === 25);
+console.log(allUsers25); // [{ id: 1, name: 'Alice', age: 25 }, { id: 3, name: 'Charlie', age: 25 }]
+
+const noMatches = users.filter(user => user.age === 40);
+console.log(noMatches); // []
+
+// Performance difference
+const largeArray = Array.from({ length: 1000000 }, (_, i) => i);
+
+// find stops at first match
+console.time('find');
+const found = largeArray.find(x => x === 500000);
+console.timeEnd('find'); // Faster - stops early
+
+// filter checks all elements
+console.time('filter');
+const filtered = largeArray.filter(x => x === 500000);
+console.timeEnd('filter'); // Slower - checks all
+
+// findIndex vs indexOf
+const index1 = users.findIndex(user => user.age === 25);
+console.log(index1); // 0
+
+const names = ['Alice', 'Bob', 'Charlie'];
+const index2 = names.indexOf('Bob');
+console.log(index2); // 1
+
+// some vs includes
+const hasUser25 = users.some(user => user.age === 25);
+console.log(hasUser25); // true
+
+const hasName = names.includes('Bob');
+console.log(hasName); // true`,
+    explanation: "Use find when you need first match, filter when you need all matches. find is more efficient for single results."
+  },
+  {
+    id: 48,
+    question: "What is reduceRight?",
+    answer: "reduceRight works like reduce but processes array from right to left instead of left to right.",
+    example: `const numbers = [1, 2, 3, 4];
+
+// reduce (left to right)
+const leftResult = numbers.reduce((acc, curr) => {
+  console.log(\`Left: \${acc} + \${curr}\`);
+  return acc + curr;
+}, 0);
+// Output: Left: 0 + 1, Left: 1 + 2, Left: 3 + 3, Left: 6 + 4
+// Result: 10
+
+// reduceRight (right to left)
+const rightResult = numbers.reduceRight((acc, curr) => {
+  console.log(\`Right: \${acc} + \${curr}\`);
+  return acc + curr;
+}, 0);
+// Output: Right: 0 + 4, Right: 4 + 3, Right: 7 + 2, Right: 9 + 1
+// Result: 10
+
+// String concatenation shows difference
+const words = ['Hello', ' ', 'World', '!'];
+
+const leftString = words.reduce((acc, word) => acc + word, '');
+console.log(leftString); // "Hello World!"
+
+const rightString = words.reduceRight((acc, word) => acc + word, '');
+console.log(rightString); // "!World Hello"
+
+// Practical example: Function composition
+const functions = [
+  x => x + 1,
+  x => x * 2,
+  x => x - 3
+];
+
+// Left to right: ((5 + 1) * 2) - 3 = 9
+const leftCompose = functions.reduce((acc, fn) => (x) => fn(acc(x)), x => x);
+console.log(leftCompose(5)); // 9
+
+// Right to left: (5 - 3) * 2 + 1 = 5
+const rightCompose = functions.reduceRight((acc, fn) => (x) => fn(acc(x)), x => x);
+console.log(rightCompose(5)); // 5
+
+// Flattening nested arrays (right to left)
+const nested = [[1, 2], [3, 4], [5, 6]];
+const flattened = nested.reduceRight((acc, arr) => acc.concat(arr), []);
+console.log(flattened); // [5, 6, 3, 4, 1, 2]
+
+// Building object from right
+const pairs = [['a', 1], ['b', 2], ['c', 3]];
+const obj = pairs.reduceRight((acc, [key, value]) => {
+  acc[key] = value;
+  return acc;
+}, {});
+console.log(obj); // { c: 3, b: 2, a: 1 }`,
+    explanation: "reduceRight is useful for right-to-left operations like function composition or when order matters in accumulation."
+  },
+  {
+    id: 49,
+    question: "What is Set, Map, WeakSet, WeakMap? Differences?",
+    answer: "Set stores unique values, Map stores key-value pairs. Weak versions allow garbage collection and only accept objects as keys.",
+    example: `// Set - unique values
+const set = new Set([1, 2, 2, 3, 3]);
+console.log(set); // Set(3) {1, 2, 3}
+set.add(4);
+set.delete(1);
+console.log(set.has(2)); // true
+console.log(set.size); // 3
+
+// Map - key-value pairs
+const map = new Map();
+map.set('name', 'John');
+map.set(1, 'number key');
+map.set(true, 'boolean key');
+console.log(map.get('name')); // 'John'
+console.log(map.size); // 3
+
+// WeakSet - only objects, weak references
+const weakSet = new WeakSet();
+let obj1 = { id: 1 };
+let obj2 = { id: 2 };
+
+weakSet.add(obj1);
+weakSet.add(obj2);
+console.log(weakSet.has(obj1)); // true
+
+// When obj1 is garbage collected, it's removed from WeakSet
+obj1 = null; // obj1 can be garbage collected
+
+// WeakMap - only object keys, weak references
+const weakMap = new WeakMap();
+let keyObj = { name: 'key' };
+
+weakMap.set(keyObj, 'some value');
+console.log(weakMap.get(keyObj)); // 'some value'
+
+// When keyObj is garbage collected, entry is removed
+keyObj = null; // entry can be garbage collected
+
+// Practical examples
+// Set for unique values
+const uniqueNumbers = [...new Set([1, 1, 2, 2, 3, 3])];
+console.log(uniqueNumbers); // [1, 2, 3]
+
+// Map for complex keys
+const userRoles = new Map();
+const user1 = { name: 'Alice' };
+const user2 = { name: 'Bob' };
+
+userRoles.set(user1, 'admin');
+userRoles.set(user2, 'user');
+console.log(userRoles.get(user1)); // 'admin'
+
+// WeakMap for private data
+const privateData = new WeakMap();
+
+class User {
+  constructor(name) {
+    this.name = name;
+    privateData.set(this, { secret: 'hidden data' });
+  }
+  
+  getSecret() {
+    return privateData.get(this).secret;
+  }
+}
+
+const user = new User('John');
+console.log(user.getSecret()); // 'hidden data'`,
+    explanation: "Use Set for unique values, Map for key-value with any key type. Weak versions prevent memory leaks with object references."
+  },
+  {
+    id: 50,
+    question: "Why keys of objects must be strings or symbols?",
+    answer: "Object keys are automatically converted to strings (except symbols). This ensures consistent property access and prevents conflicts.",
+    example: `const obj = {};
+
+// All these become string keys
+obj[1] = 'number';
+obj[true] = 'boolean';
+obj[null] = 'null';
+obj[undefined] = 'undefined';
+
+console.log(obj);
+// { '1': 'number', 'true': 'boolean', 'null': 'null', 'undefined': 'undefined' }
+
+// Accessing with different types
+console.log(obj[1]);     // 'number'
+console.log(obj['1']);   // 'number' - same as above
+console.log(obj[true]);  // 'boolean'
+console.log(obj['true']); // 'boolean' - same as above
+
+// Objects as keys get stringified
+const keyObj1 = { id: 1 };
+const keyObj2 = { id: 2 };
+
+obj[keyObj1] = 'object1';
+obj[keyObj2] = 'object2'; // Overwrites previous!
+
+console.log(obj[keyObj1]); // 'object2'
+console.log(obj['[object Object]']); // 'object2'
+
+// Symbols are the exception
+const sym1 = Symbol('key1');
+const sym2 = Symbol('key2');
+
+obj[sym1] = 'symbol1';
+obj[sym2] = 'symbol2';
+
+console.log(obj[sym1]); // 'symbol1'
+console.log(obj[sym2]); // 'symbol2'
+
+// Symbols don't appear in Object.keys()
+console.log(Object.keys(obj)); // ['1', 'true', 'null', 'undefined', '[object Object]']
+console.log(Object.getOwnPropertySymbols(obj)); // [Symbol(key1), Symbol(key2)]
+
+// Map allows any key type
+const map = new Map();
+map.set(1, 'number key');
+map.set('1', 'string key');
+map.set(keyObj1, 'object key 1');
+map.set(keyObj2, 'object key 2');
+
+console.log(map.get(1));     // 'number key'
+console.log(map.get('1'));   // 'string key'
+console.log(map.get(keyObj1)); // 'object key 1'
+console.log(map.get(keyObj2)); // 'object key 2'
+
+// Computed property names
+const dynamicKey = 'computed';
+const dynamicObj = {
+  [dynamicKey]: 'value',
+  [sym1]: 'symbol value',
+  [1 + 2]: 'computed number'
+};
+
+console.log(dynamicObj); // { '3': 'computed number', computed: 'value', [Symbol(key1)]: 'symbol value' }`,
+    explanation: "String conversion ensures consistent property access. Use Map when you need non-string keys or Symbols for unique properties."
+  },
+  {
+    id: 51,
+    question: "What is Object.assign and how does it work?",
+    answer: "Object.assign copies enumerable properties from source objects to target object. It performs shallow copy and returns target.",
+    example: `// Basic usage
+const target = { a: 1, b: 2 };
+const source1 = { b: 3, c: 4 };
+const source2 = { c: 5, d: 6 };
+
+const result = Object.assign(target, source1, source2);
+console.log(result); // { a: 1, b: 3, c: 5, d: 6 }
+console.log(target === result); // true - target is modified
+
+// Cloning objects (shallow)
+const original = { name: 'John', age: 30 };
+const clone = Object.assign({}, original);
+clone.name = 'Jane';
+console.log(original.name); // 'John' - unchanged
+
+// Merging multiple objects
+const defaults = { theme: 'light', lang: 'en' };
+const userPrefs = { theme: 'dark' };
+const config = Object.assign({}, defaults, userPrefs);
+console.log(config); // { theme: 'dark', lang: 'en' }
+
+// Shallow copy limitation
+const nested = {
+  user: { name: 'John' },
+  settings: { theme: 'dark' }
+};
+
+const shallowCopy = Object.assign({}, nested);
+shallowCopy.user.name = 'Jane';
+console.log(nested.user.name); // 'Jane' - original affected!
+
+// Only enumerable properties are copied
+const source = {};
+Object.defineProperty(source, 'hidden', {
+  value: 'secret',
+  enumerable: false
+});
+source.visible = 'public';
+
+const copy = Object.assign({}, source);
+console.log(copy); // { visible: 'public' } - 'hidden' not copied
+
+// Symbols are copied
+const sym = Symbol('key');
+const withSymbol = { [sym]: 'symbol value', normal: 'normal value' };
+const symbolCopy = Object.assign({}, withSymbol);
+console.log(symbolCopy[sym]); // 'symbol value'
+
+// Modern alternative: spread operator
+const spreadClone = { ...original };
+const spreadMerge = { ...defaults, ...userPrefs };
+
+// Getters become data properties
+const withGetter = {
+  get computed() {
+    return 'computed value';
+  }
+};
+
+const getterCopy = Object.assign({}, withGetter);
+console.log(Object.getOwnPropertyDescriptor(getterCopy, 'computed'));
+// { value: 'computed value', writable: true, enumerable: true, configurable: true }`,
+    explanation: "Object.assign is useful for shallow cloning and merging. Use spread operator for cleaner syntax in modern JavaScript."
+  },
+  {
+    id: 52,
+    question: "What is structuredClone?",
+    answer: "structuredClone creates deep copies of objects using structured clone algorithm. It handles more data types than JSON methods.",
+    example: `// Basic deep cloning
+const original = {
+  name: 'John',
+  age: 30,
+  address: {
+    city: 'NYC',
+    country: 'USA'
+  },
+  hobbies: ['reading', 'coding']
+};
+
+const deepCopy = structuredClone(original);
+deepCopy.address.city = 'LA';
+deepCopy.hobbies.push('gaming');
+
+console.log(original.address.city); // 'NYC' - unchanged
+console.log(original.hobbies); // ['reading', 'coding'] - unchanged
+
+// Handles complex data types
+const complex = {
+  date: new Date(),
+  regex: /test/gi,
+  map: new Map([['key', 'value']]),
+  set: new Set([1, 2, 3]),
+  arrayBuffer: new ArrayBuffer(8),
+  error: new Error('test error')
+};
+
+const complexCopy = structuredClone(complex);
+console.log(complexCopy.date instanceof Date); // true
+console.log(complexCopy.regex instanceof RegExp); // true
+console.log(complexCopy.map instanceof Map); // true
+
+// Handles circular references
+const circular = { name: 'test' };
+circular.self = circular;
+
+const circularCopy = structuredClone(circular);
+console.log(circularCopy.self === circularCopy); // true
+
+// Cannot clone functions, DOM nodes, etc.
+const withFunction = {
+  data: 'value',
+  method: function() { return 'hello'; }
+};
+
+try {
+  const functionCopy = structuredClone(withFunction);
+} catch (error) {
+  console.log('Cannot clone functions'); // DataCloneError
+}
+
+// Comparison with other methods
+const testObj = {
+  date: new Date(),
+  nested: { value: 42 }
+};
+
+// JSON method (limited)
+const jsonCopy = JSON.parse(JSON.stringify(testObj));
+console.log(jsonCopy.date instanceof Date); // false - becomes string
+
+// structuredClone (better)
+const structuredCopy = structuredClone(testObj);
+console.log(structuredCopy.date instanceof Date); // true
+
+// Browser support check
+if (typeof structuredClone === 'function') {
+  const copy = structuredClone(original);
+} else {
+  // Fallback to JSON or custom implementation
+  const copy = JSON.parse(JSON.stringify(original));
+}
+
+// With transfer (for ArrayBuffers)
+const buffer = new ArrayBuffer(16);
+const transferred = structuredClone(buffer, { transfer: [buffer] });
+// Original buffer is now detached`,
+    explanation: "structuredClone is the modern way to deep clone objects. It handles more types than JSON but can't clone functions or DOM nodes."
+  },
+  {
+    id: 53,
+    question: "How to remove duplicates from an array? (multiple ways)",
+    answer: "Use Set, filter with indexOf, reduce, or Map depending on data type and performance needs.",
+    example: `const numbers = [1, 2, 2, 3, 3, 4, 5, 5];
+
+// Method 1: Set (simplest for primitives)
+const unique1 = [...new Set(numbers)];
+console.log(unique1); // [1, 2, 3, 4, 5]
+
+// Method 2: filter + indexOf
+const unique2 = numbers.filter((item, index) => numbers.indexOf(item) === index);
+console.log(unique2); // [1, 2, 3, 4, 5]
+
+// Method 3: reduce
+const unique3 = numbers.reduce((acc, current) => {
+  if (!acc.includes(current)) {
+    acc.push(current);
+  }
+  return acc;
+}, []);
+console.log(unique3); // [1, 2, 3, 4, 5]
+
+// Method 4: Map for better performance
+const unique4 = numbers.reduce((acc, current) => {
+  const map = acc.map || new Map();
+  if (!map.has(current)) {
+    map.set(current, true);
+    acc.result = acc.result || [];
+    acc.result.push(current);
+  }
+  acc.map = map;
+  return acc;
+}, {}).result;
+
+// For objects (by property)
+const users = [
+  { id: 1, name: 'John' },
+  { id: 2, name: 'Jane' },
+  { id: 1, name: 'John' },
+  { id: 3, name: 'Bob' }
+];
+
+// Remove duplicates by id
+const uniqueUsers = users.filter((user, index, self) => 
+  index === self.findIndex(u => u.id === user.id)
+);
+console.log(uniqueUsers); // [{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }, { id: 3, name: 'Bob' }]
+
+// Using Map for objects (more efficient)
+const uniqueUsersMap = Array.from(
+  users.reduce((map, user) => map.set(user.id, user), new Map()).values()
+);
+
+// For complex objects (by multiple properties)
+const products = [
+  { name: 'Apple', category: 'Fruit' },
+  { name: 'Banana', category: 'Fruit' },
+  { name: 'Apple', category: 'Fruit' },
+  { name: 'Apple', category: 'Electronics' }
+];
+
+const uniqueProducts = products.filter((product, index, self) =>
+  index === self.findIndex(p => p.name === product.name && p.category === product.category)
+);
+
+// Performance comparison for large arrays
+const largeArray = Array.from({ length: 100000 }, () => Math.floor(Math.random() * 1000));
+
+console.time('Set method');
+const setResult = [...new Set(largeArray)];
+console.timeEnd('Set method'); // Fastest
+
+console.time('filter + indexOf');
+const filterResult = largeArray.filter((item, index) => largeArray.indexOf(item) === index);
+console.timeEnd('filter + indexOf'); // Slowest
+
+// Custom function for any key
+function uniqueBy(array, key) {
+  const seen = new Set();
+  return array.filter(item => {
+    const value = typeof key === 'function' ? key(item) : item[key];
+    if (seen.has(value)) {
+      return false;
+    }
+    seen.add(value);
+    return true;
+  });
+}
+
+const uniqueByName = uniqueBy(users, 'name');
+const uniqueByLength = uniqueBy(['a', 'bb', 'c', 'dd'], str => str.length);`,
+    explanation: "Use Set for primitives (fastest), filter+indexOf for simple cases, Map/custom functions for objects. Consider performance for large arrays."
+  },
+  {
+    id: 54,
+    question: "Explain sorting in JS. Why does sort() behave weird sometimes?",
+    answer: "Array.sort() converts elements to strings by default, causing unexpected results with numbers. Use compare function for proper sorting.",
+    example: `// Default sort (converts to strings)
+const numbers = [10, 5, 40, 25, 1000, 1];
+console.log(numbers.sort()); // [1, 10, 1000, 25, 40, 5] - Wrong!
+
+// Why: '10' < '1000' < '25' < '40' < '5' (string comparison)
+
+// Correct numeric sort
+const numericSort = numbers.sort((a, b) => a - b);
+console.log(numericSort); // [1, 5, 10, 25, 40, 1000] - Correct!
+
+// Descending order
+const descending = numbers.sort((a, b) => b - a);
+console.log(descending); // [1000, 40, 25, 10, 5, 1]
+
+// String sorting (works as expected)
+const fruits = ['banana', 'apple', 'cherry', 'date'];
+console.log(fruits.sort()); // ['apple', 'banana', 'cherry', 'date']
+
+// Case-insensitive string sort
+const names = ['John', 'alice', 'Bob', 'charlie'];
+const caseInsensitive = names.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+console.log(caseInsensitive); // ['alice', 'Bob', 'charlie', 'John']
+
+// Sorting objects
+const users = [
+  { name: 'John', age: 30 },
+  { name: 'Alice', age: 25 },
+  { name: 'Bob', age: 35 }
+];
+
+// Sort by age
+const byAge = users.sort((a, b) => a.age - b.age);
+console.log(byAge); // Alice(25), John(30), Bob(35)
+
+// Sort by name
+const byName = users.sort((a, b) => a.name.localeCompare(b.name));
+console.log(byName); // Alice, Bob, John
+
+// Multi-level sorting
+const employees = [
+  { department: 'IT', name: 'John', salary: 50000 },
+  { department: 'HR', name: 'Alice', salary: 45000 },
+  { department: 'IT', name: 'Bob', salary: 55000 },
+  { department: 'HR', name: 'Charlie', salary: 48000 }
+];
+
+const multiSort = employees.sort((a, b) => {
+  // First by department
+  if (a.department !== b.department) {
+    return a.department.localeCompare(b.department);
+  }
+  // Then by salary (descending)
+  return b.salary - a.salary;
+});
+
+// Stable sort (maintains relative order for equal elements)
+const items = [
+  { name: 'A', priority: 1 },
+  { name: 'B', priority: 2 },
+  { name: 'C', priority: 1 },
+  { name: 'D', priority: 2 }
+];
+
+// Modern browsers have stable sort
+const stableSort = items.sort((a, b) => a.priority - b.priority);
+// A and C maintain their relative order, B and D maintain theirs
+
+// Custom sort functions
+function sortByLength(a, b) {
+  return a.length - b.length;
+}
+
+const words = ['hello', 'hi', 'javascript', 'code'];
+console.log(words.sort(sortByLength)); // ['hi', 'code', 'hello', 'javascript']
+
+// Sort modifies original array
+const original = [3, 1, 2];
+const sorted = original.sort((a, b) => a - b);
+console.log(original); // [1, 2, 3] - modified!
+console.log(sorted === original); // true
+
+// To avoid modifying original
+const copy = [...original].sort((a, b) => a - b);`,
+    explanation: "sort() converts to strings by default. Always use compare function for numbers. Remember sort() modifies the original array."
+  },
+  {
+    id: 55,
+    question: "What is the time complexity of common array methods?",
+    answer: "Most array methods are O(n). push/pop are O(1), shift/unshift are O(n), sort is O(n log n).",
+    example: `const arr = [1, 2, 3, 4, 5];
+
+// O(1) - Constant time
+arr.push(6);        // Add to end
+arr.pop();          // Remove from end
+arr[0];             // Access by index
+arr.length;         // Get length
+
+// O(n) - Linear time
+arr.shift();        // Remove from start (shifts all elements)
+arr.unshift(0);     // Add to start (shifts all elements)
+arr.indexOf(3);     // Find element (worst case: check all)
+arr.includes(4);    // Check if exists (worst case: check all)
+arr.reverse();      // Reverse array
+
+// O(n) - Linear time (iterate through all)
+arr.forEach(x => console.log(x));
+arr.map(x => x * 2);
+arr.filter(x => x > 2);
+arr.reduce((acc, x) => acc + x, 0);
+arr.find(x => x > 3);
+arr.some(x => x > 3);
+arr.every(x => x > 0);
+
+// O(n log n) - Linearithmic time
+arr.sort((a, b) => a - b);  // Most efficient comparison-based sorting
+
+// O(n²) - Quadratic time (nested operations)
+// Removing duplicates with nested loops
+function removeDuplicatesNaive(array) {
+  const result = [];
+  for (let i = 0; i < array.length; i++) {
+    let isDuplicate = false;
+    for (let j = 0; j < result.length; j++) {
+      if (array[i] === result[j]) {
+        isDuplicate = true;
+        break;
+      }
+    }
+    if (!isDuplicate) {
+      result.push(array[i]);
+    }
+  }
+  return result;
+}
+
+// Performance comparison
+const largeArray = Array.from({ length: 100000 }, (_, i) => i);
+
+console.time('O(1) - push');
+largeArray.push(100001);
+console.timeEnd('O(1) - push'); // Very fast
+
+console.time('O(n) - indexOf');
+largeArray.indexOf(50000);
+console.timeEnd('O(n) - indexOf'); // Slower
+
+console.time('O(n) - map');
+largeArray.map(x => x * 2);
+console.timeEnd('O(n) - map'); // Slower
+
+console.time('O(n log n) - sort');
+[...largeArray].sort((a, b) => a - b);
+console.timeEnd('O(n log n) - sort'); // Slowest
+
+// Optimizing common operations
+// Instead of multiple indexOf calls (O(n²))
+const duplicates1 = arr.filter((item, index) => arr.indexOf(item) !== index);
+
+// Use Set for O(n) performance
+const seen = new Set();
+const duplicates2 = arr.filter(item => {
+  if (seen.has(item)) {
+    return true;
+  }
+  seen.add(item);
+  return false;
+});
+
+// Memory vs Time tradeoffs
+// Time: O(n), Space: O(n)
+const uniqueWithSet = [...new Set(arr)];
+
+// Time: O(n²), Space: O(1)
+const uniqueWithFilter = arr.filter((item, index) => arr.indexOf(item) === index);`,
+    explanation: "Understanding time complexity helps choose the right method. Use Set/Map for O(1) lookups, avoid nested array methods for large data."
   }
 ];

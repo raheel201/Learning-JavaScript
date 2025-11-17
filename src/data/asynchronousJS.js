@@ -475,5 +475,537 @@ const apiCall = throttle(async (endpoint) => {
   return response.json();
 }, 1000); // Max 1 call per second`,
     explanation: "Debouncing: search suggestions, form validation. Throttling: scroll events, resize events, API rate limiting."
+  },
+  {
+    id: 37,
+    question: "What is the job queue vs callback queue?",
+    answer: "Job queue (microtask queue) handles Promises. Callback queue (macrotask queue) handles setTimeout, events. Job queue has higher priority.",
+    example: `console.log('1');
+
+setTimeout(() => console.log('2'), 0); // Callback queue
+
+Promise.resolve().then(() => console.log('3')); // Job queue
+
+console.log('4');
+
+// Output: 1, 4, 3, 2
+// Job queue (Promise) runs before callback queue (setTimeout)
+
+// Multiple jobs and callbacks
+setTimeout(() => console.log('timeout1'), 0);
+setTimeout(() => console.log('timeout2'), 0);
+
+Promise.resolve().then(() => console.log('promise1'));
+Promise.resolve().then(() => console.log('promise2'));
+
+// Output: promise1, promise2, timeout1, timeout2`,
+    explanation: "Job queue processes all microtasks before any macrotask runs. This ensures Promise callbacks execute before timer callbacks."
+  },
+  {
+    id: 38,
+    question: "How does the browser Web APIs work?",
+    answer: "Web APIs (setTimeout, fetch, DOM events) run outside JavaScript engine. They use callback queues to communicate back to JS.",
+    example: `// Web API flow
+console.log('Start');
+
+// 1. setTimeout goes to Web API
+setTimeout(() => {
+  console.log('Timer done'); // 4. Callback added to queue
+}, 1000);
+
+// 2. fetch goes to Web API  
+fetch('/api/data')
+  .then(data => console.log('Fetch done')); // 3. Promise added to job queue
+
+console.log('End'); // Runs immediately
+
+// Event listener example
+button.addEventListener('click', () => {
+  console.log('Button clicked'); // Added to callback queue when clicked
+});
+
+// Web APIs don't block JavaScript
+for (let i = 0; i < 1000000; i++) {
+  // This loop runs while Web APIs work in background
+}
+
+// Multiple Web APIs
+setTimeout(() => console.log('Timer 1'), 100);
+setTimeout(() => console.log('Timer 2'), 50);
+setInterval(() => console.log('Interval'), 200);
+
+// Output order depends on Web API completion time`,
+    explanation: "Web APIs handle async operations outside JS engine, preventing blocking. They queue callbacks when operations complete."
+  },
+  {
+    id: 39,
+    question: "What is the difference between setTimeout(0) and process.nextTick (Node)?",
+    answer: "process.nextTick has highest priority, runs before any other async operation. setTimeout(0) goes to macrotask queue.",
+    example: `// Node.js execution order
+console.log('1');
+
+setTimeout(() => console.log('2'), 0); // Macrotask
+
+process.nextTick(() => console.log('3')); // Highest priority
+
+Promise.resolve().then(() => console.log('4')); // Microtask
+
+setImmediate(() => console.log('5')); // Macrotask (after setTimeout)
+
+console.log('6');
+
+// Output: 1, 6, 3, 4, 2, 5
+// Order: Sync -> nextTick -> Microtasks -> Macrotasks
+
+// Multiple nextTicks
+process.nextTick(() => {
+  console.log('nextTick 1');
+  process.nextTick(() => console.log('nested nextTick'));
+});
+
+process.nextTick(() => console.log('nextTick 2'));
+
+Promise.resolve().then(() => console.log('Promise'));
+
+// Output: nextTick 1, nextTick 2, nested nextTick, Promise`,
+    explanation: "process.nextTick runs before microtasks and macrotasks. Use sparingly as it can starve the event loop."
+  },
+  {
+    id: 40,
+    question: "Why is async/await just syntax over promises?",
+    answer: "async/await is syntactic sugar that makes Promise code look synchronous. It compiles to Promise chains internally.",
+    example: `// async/await version
+async function fetchUser() {
+  try {
+    const response = await fetch('/api/user');
+    const user = await response.json();
+    return user;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Equivalent Promise version
+function fetchUserPromise() {
+  return fetch('/api/user')
+    .then(response => response.json())
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+// async function always returns Promise
+async function getValue() {
+  return 42;
+}
+
+getValue().then(value => console.log(value)); // 42
+
+// await can only be used in async functions
+function regularFunction() {
+  // await fetch('/api'); // SyntaxError
+}
+
+// Top-level await (modern environments)
+// const data = await fetch('/api'); // Works in modules
+
+// Error handling comparison
+async function asyncError() {
+  throw new Error('Async error');
+}
+
+asyncError().catch(err => console.log(err.message)); // 'Async error'`,
+    explanation: "async/await makes asynchronous code easier to read and write, but it's still Promises underneath."
+  },
+  {
+    id: 41,
+    question: "How do you cancel a promise? Is it possible?",
+    answer: "Promises can't be cancelled directly. Use AbortController, race with rejection, or ignore results with flags.",
+    example: `// Method 1: AbortController (modern approach)
+function fetchWithCancel(url) {
+  const controller = new AbortController();
+  
+  const promise = fetch(url, { 
+    signal: controller.signal 
+  }).catch(err => {
+    if (err.name === 'AbortError') {
+      console.log('Request cancelled');
+    }
+    throw err;
+  });
+  
+  return { promise, cancel: () => controller.abort() };
+}
+
+const { promise, cancel } = fetchWithCancel('/api/data');
+setTimeout(cancel, 1000); // Cancel after 1 second
+
+// Method 2: Race with timeout
+function withTimeout(promise, ms) {
+  const timeout = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Timeout')), ms)
+  );
+  
+  return Promise.race([promise, timeout]);
+}
+
+// Method 3: Cancellation token pattern
+function createCancellablePromise(executor) {
+  let cancelled = false;
+  
+  const promise = new Promise((resolve, reject) => {
+    executor(
+      value => !cancelled && resolve(value),
+      error => !cancelled && reject(error)
+    );
+  });
+  
+  return {
+    promise,
+    cancel: () => { cancelled = true; }
+  };
+}
+
+const { promise: myPromise, cancel: cancelPromise } = createCancellablePromise(
+  (resolve) => setTimeout(() => resolve('Done'), 2000)
+);
+
+setTimeout(cancelPromise, 1000); // Cancel before completion`,
+    explanation: "Use AbortController for fetch requests, timeout patterns for time limits, or cancellation tokens for custom promises."
+  },
+  {
+    id: 42,
+    question: "What is an AbortController and how is it used?",
+    answer: "AbortController provides a way to cancel async operations like fetch requests. It uses AbortSignal to communicate cancellation.",
+    example: `// Basic AbortController usage
+const controller = new AbortController();
+const signal = controller.signal;
+
+fetch('/api/data', { signal })
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(err => {
+    if (err.name === 'AbortError') {
+      console.log('Request was cancelled');
+    }
+  });
+
+// Cancel the request
+controller.abort();
+
+// Timeout with AbortController
+function fetchWithTimeout(url, timeout) {
+  const controller = new AbortController();
+  
+  setTimeout(() => controller.abort(), timeout);
+  
+  return fetch(url, { signal: controller.signal });
+}
+
+fetchWithTimeout('/api/slow', 5000) // 5 second timeout
+  .catch(err => console.log('Request timed out'));
+
+// Multiple operations with same controller
+const batchController = new AbortController();
+
+Promise.all([
+  fetch('/api/users', { signal: batchController.signal }),
+  fetch('/api/posts', { signal: batchController.signal }),
+  fetch('/api/comments', { signal: batchController.signal })
+]).catch(err => {
+  if (err.name === 'AbortError') {
+    console.log('All requests cancelled');
+  }
+});
+
+// Cancel all requests at once
+batchController.abort();
+
+// Custom abortable operations
+function delay(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms);
+    
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timeout);
+      reject(new Error('Aborted'));
+    });
+  });
+}`,
+    explanation: "AbortController is the standard way to cancel fetch requests and other async operations. Essential for preventing memory leaks."
+  },
+  {
+    id: 43,
+    question: "What is a promise chain? Example?",
+    answer: "Promise chain is a sequence of .then() calls where each returns a value or promise for the next .then() to handle.",
+    example: `// Basic promise chain
+fetch('/api/user/1')
+  .then(response => response.json()) // Returns promise
+  .then(user => {
+    console.log('User:', user.name);
+    return fetch(\`/api/posts/\${user.id}\`); // Return another promise
+  })
+  .then(response => response.json())
+  .then(posts => {
+    console.log('Posts:', posts.length);
+    return posts.filter(post => post.published); // Return value
+  })
+  .then(publishedPosts => {
+    console.log('Published:', publishedPosts.length);
+  })
+  .catch(error => {
+    console.error('Chain failed:', error);
+  });
+
+// Chain with transformations
+Promise.resolve(5)
+  .then(x => x * 2)     // 10
+  .then(x => x + 3)     // 13
+  .then(x => x.toString()) // "13"
+  .then(str => str.split('')) // ["1", "3"]
+  .then(arr => console.log(arr));
+
+// Error handling in chains
+Promise.resolve('start')
+  .then(value => {
+    if (value === 'start') {
+      throw new Error('Something went wrong');
+    }
+    return value;
+  })
+  .then(value => {
+    console.log('This won\'t run');
+  })
+  .catch(error => {
+    console.log('Caught:', error.message);
+    return 'recovered'; // Continue chain
+  })
+  .then(value => {
+    console.log('Recovered with:', value);
+  });
+
+// Conditional chaining
+fetch('/api/user')
+  .then(response => response.json())
+  .then(user => {
+    if (user.isAdmin) {
+      return fetch('/api/admin-data').then(r => r.json());
+    }
+    return { message: 'Regular user' };
+  })
+  .then(data => console.log(data));`,
+    explanation: "Promise chains allow sequential async operations. Each .then() receives the previous result and can return values or new promises."
+  },
+  {
+    id: 44,
+    question: "How do you create a custom promise?",
+    answer: "Use Promise constructor with executor function that receives resolve and reject callbacks.",
+    example: `// Basic custom promise
+const myPromise = new Promise((resolve, reject) => {
+  const success = Math.random() > 0.5;
+  
+  setTimeout(() => {
+    if (success) {
+      resolve('Operation successful!');
+    } else {
+      reject(new Error('Operation failed!'));
+    }
+  }, 1000);
+});
+
+myPromise
+  .then(result => console.log(result))
+  .catch(error => console.error(error));
+
+// Promisify callback-based function
+function readFileCallback(filename, callback) {
+  setTimeout(() => {
+    if (filename.endsWith('.txt')) {
+      callback(null, 'File content');
+    } else {
+      callback(new Error('Invalid file type'));
+    }
+  }, 500);
+}
+
+function readFilePromise(filename) {
+  return new Promise((resolve, reject) => {
+    readFileCallback(filename, (error, data) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
+// Usage
+readFilePromise('data.txt')
+  .then(content => console.log(content))
+  .catch(error => console.error(error));
+
+// Promise with progress tracking
+function downloadFile(url) {
+  return new Promise((resolve, reject) => {
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+      progress += 10;
+      console.log(\`Download progress: \${progress}%\`);
+      
+      if (progress >= 100) {
+        clearInterval(interval);
+        resolve('Download complete');
+      }
+    }, 100);
+  });
+}
+
+// Immediately resolved/rejected promises
+const resolvedPromise = Promise.resolve('Already done');
+const rejectedPromise = Promise.reject(new Error('Already failed'));`,
+    explanation: "Custom promises wrap async operations. Always call resolve() for success or reject() for failure inside the executor."
+  },
+  {
+    id: 45,
+    question: "What is an unhandled promise rejection?",
+    answer: "Unhandled promise rejection occurs when a promise is rejected but no .catch() or try/catch handles the error.",
+    example: `// Unhandled rejection - BAD
+Promise.reject(new Error('This will be unhandled'));
+// Browser console shows: Uncaught (in promise) Error
+
+// Handled rejection - GOOD
+Promise.reject(new Error('This is handled'))
+  .catch(error => console.error('Caught:', error.message));
+
+// Async function without try/catch - BAD
+async function riskyFunction() {
+  throw new Error('Async error');
+}
+
+riskyFunction(); // Unhandled promise rejection
+
+// Proper handling - GOOD
+async function safeFunction() {
+  try {
+    await riskyFunction();
+  } catch (error) {
+    console.error('Handled:', error.message);
+  }
+}
+
+// Or handle at call site
+riskyFunction().catch(error => console.error('Caught:', error));
+
+// Global handlers
+window.addEventListener('unhandledrejection', event => {
+  console.error('Unhandled promise rejection:', event.reason);
+  event.preventDefault(); // Prevent default browser behavior
+});
+
+// Node.js global handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Common mistake: forgetting to return promise
+function fetchData() {
+  fetch('/api/data') // Missing return!
+    .then(response => response.json())
+    .catch(error => console.error(error));
+}
+
+// Correct version
+function fetchDataCorrect() {
+  return fetch('/api/data')
+    .then(response => response.json())
+    .catch(error => {
+      console.error(error);
+      throw error; // Re-throw if needed
+    });
+}`,
+    explanation: "Always handle promise rejections with .catch() or try/catch. Unhandled rejections can crash Node.js applications."
+  },
+  {
+    id: 46,
+    question: "What is event loop starvation?",
+    answer: "Event loop starvation occurs when microtasks keep adding more microtasks, preventing macrotasks from executing.",
+    example: `// Event loop starvation example - BAD
+function starveEventLoop() {
+  Promise.resolve().then(() => {
+    console.log('Microtask');
+    starveEventLoop(); // Creates infinite microtasks
+  });
+}
+
+// This will prevent setTimeout from running
+setTimeout(() => console.log('This may never run'), 0);
+starveEventLoop();
+
+// Better approach - yield control
+function yieldingMicrotasks(count = 0) {
+  if (count < 1000) {
+    Promise.resolve().then(() => {
+      console.log('Microtask', count);
+      
+      // Yield control every 10 microtasks
+      if (count % 10 === 0) {
+        setTimeout(() => yieldingMicrotasks(count + 1), 0);
+      } else {
+        yieldingMicrotasks(count + 1);
+      }
+    });
+  }
+}
+
+// process.nextTick starvation in Node.js
+function nextTickStarvation() {
+  process.nextTick(() => {
+    console.log('nextTick');
+    nextTickStarvation(); // Infinite nextTick calls
+  });
+}
+
+// This setTimeout will never run
+setTimeout(() => console.log('Timer'), 0);
+// nextTickStarvation(); // Uncomment to see starvation
+
+// Solution: Limit recursive calls
+function limitedRecursion(count = 0) {
+  if (count < 100) {
+    process.nextTick(() => limitedRecursion(count + 1));
+  } else {
+    console.log('Done with nextTick calls');
+  }
+}
+
+// Real-world example: Processing large datasets
+function processLargeArray(array, batchSize = 100) {
+  return new Promise((resolve) => {
+    let index = 0;
+    
+    function processBatch() {
+      const endIndex = Math.min(index + batchSize, array.length);
+      
+      // Process batch
+      for (let i = index; i < endIndex; i++) {
+        // Process array[i]
+      }
+      
+      index = endIndex;
+      
+      if (index < array.length) {
+        // Yield control to event loop
+        setTimeout(processBatch, 0);
+      } else {
+        resolve();
+      }
+    }
+    
+    processBatch();
+  });
+}`,
+    explanation: "Avoid infinite microtask recursion. Use setTimeout(0) or batch processing to yield control back to the event loop."
   }
 ];
