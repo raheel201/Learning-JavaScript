@@ -23,5 +23,5 @@ export const questionsData = {
   "ReactJS": reactJS,
   "NextJS": nextJS,
   "TypeScript": typeScript,
-  "HTML/CSS": htmlCSS,
+  "HTML/CSS": htmlCSS
 };
